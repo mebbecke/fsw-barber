@@ -1,5 +1,5 @@
 import { SearchIcon } from "lucide-react"
-import { Header } from "./_components/ui/header"
+import { Header } from "./_components/header"
 import { Input } from "./_components/ui/input"
 import { Button } from "./_components/ui/button"
 import Image from "next/image"
