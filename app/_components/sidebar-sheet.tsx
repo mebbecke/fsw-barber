@@ -1,7 +1,12 @@
 "use client"
 
+import Link from "next/link"
+import Image from "next/image"
+import React from "react"
+import { signIn, signOut, useSession } from "next-auth/react"
 import { quickSearchOptions } from "@/app/_constants/search"
 import { CalendarIcon, HomeIcon, LogInIcon, LogOutIcon } from "lucide-react"
+
 import { SheetClose, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet"
 import {
   Dialog,
@@ -13,10 +18,6 @@ import {
 } from "./ui/dialog"
 import { Avatar, AvatarImage } from "./ui/avatar"
 import { Button } from "./ui/button"
-import Link from "next/link"
-import Image from "next/image"
-import React from "react"
-import { signIn, signOut, useSession } from "next-auth/react"
 
 const SidebarSheet = () => {
   const { data } = useSession()
@@ -92,19 +93,24 @@ const SidebarSheet = () => {
 
       <div className="flex flex-col gap-2 border-b border-solid py-5">
         {quickSearchOptions.map((option) => (
-          <Button
-            key={option.title}
-            className="justify-start gap-2"
-            variant="ghost"
-          >
-            <Image
-              alt={option.title}
-              src={option.imageUrl}
-              height={18}
-              width={18}
-            />
-            {option.title}
-          </Button>
+          <SheetClose key={option.title} asChild>
+            <Button
+              key={option.title}
+              className="justify-start gap-2"
+              variant="ghost"
+              asChild
+            >
+              <Link href={`/barbershops?search=${option.title}`}>
+                <Image
+                  alt={option.title}
+                  src={option.imageUrl}
+                  height={18}
+                  width={18}
+                />
+                {option.title}
+              </Link>
+            </Button>
+          </SheetClose>
         ))}
       </div>
 
