@@ -52,6 +52,8 @@ const TIME_LIST = [
   "18:00",
 ]
 
+// TODO: não exibir horários passados
+// TODO: distinguir horários de cada barbearia
 const getTimeList = (bookings: Booking[]) => {
   return TIME_LIST.filter((time) => {
     const hour = Number(time.split(":")[0])
