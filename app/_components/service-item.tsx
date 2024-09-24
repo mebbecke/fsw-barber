@@ -3,13 +3,18 @@
 import { Barbershop, BarbershopService, Booking } from "@prisma/client"
 import Image from "next/image"
 import { ptBR } from "date-fns/locale"
-import { useEffect, useState } from "react"
-import { addDays, format, set } from "date-fns"
+import { useEffect, useMemo, useState } from "react"
+import { addDays, format, isPast, isToday, set } from "date-fns"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
+import { Calendar } from "./ui/calendar"
+import { createBooking } from "../_actions/create-booking"
+import { getBookings } from "../_actions/get-bookings"
+import { Dialog, DialogContent } from "./ui/dialog"
+import SignInDialog from "./sign-in-dialog"
 import {
   Sheet,
   SheetContent,
@@ -17,11 +22,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "./ui/sheet"
-import { Calendar } from "./ui/calendar"
-import { createBooking } from "../_actions/create-booking"
-import { getBookings } from "../_actions/get-bookings"
-import { Dialog, DialogContent } from "./ui/dialog"
-import SignInDialog from "./sign-in-dialog"
 
 interface ServiceItemProps {
   service: BarbershopService
@@ -52,12 +52,22 @@ const TIME_LIST = [
   "18:00",
 ]
 
+interface GetTimeListProps {
+  bookings: Booking[]
+  selectedDay: Date
+}
+
 // TODO: não exibir horários passados
 // TODO: distinguir horários de cada barbearia
-const getTimeList = (bookings: Booking[]) => {
+const getTimeList = ({ bookings, selectedDay }: GetTimeListProps) => {
   return TIME_LIST.filter((time) => {
     const hour = Number(time.split(":")[0])
     const minutes = Number(time.split(":")[1])
+
+    const timeIsOnPast = isPast(set(new Date(), { hours: hour, minutes }))
+    if (timeIsOnPast && isToday(selectedDay)) {
+      return false
+    }
 
     const hasBookingOnCurrentTime = bookings.some(
       (booking) =>
@@ -136,6 +146,14 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
       toast.error("Erro ao criar reserva")
     }
   }
+
+  const timeList = useMemo(() => {
+    if (!selectedDay) return []
+    return getTimeList({
+      bookings: dayBookings,
+      selectedDay,
+    })
+  }, [dayBookings, selectedDay])
 
   return (
     <>
@@ -217,18 +235,24 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
 
                   {selectedDay && (
                     <div className="flex gap-3 overflow-x-auto border-b border-solid p-5 [&::-webkit-scrollbar]:hidden">
-                      {getTimeList(dayBookings).map((time) => (
-                        <Button
-                          key={time}
-                          variant={
-                            selectedTime === time ? "default" : "outline"
-                          }
-                          className="rounded-full"
-                          onClick={() => handleTimeSelect(time)}
-                        >
-                          {time}
-                        </Button>
-                      ))}
+                      {timeList.length > 0 ? (
+                        timeList.map((time) => (
+                          <Button
+                            key={time}
+                            variant={
+                              selectedTime === time ? "default" : "outline"
+                            }
+                            className="rounded-full"
+                            onClick={() => handleTimeSelect(time)}
+                          >
+                            {time}
+                          </Button>
+                        ))
+                      ) : (
+                        <p className="text-xs">
+                          Não há mais horário disponíveis para este dia.
+                        </p>
+                      )}
                     </div>
                   )}
 
