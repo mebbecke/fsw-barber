@@ -2,6 +2,13 @@
 
 Aplicativo de agendamento de serviços de barbearias.
 
+Acesse a demonstração do app através [deste link](https://fsw-barber-wheat-five.vercel.app/).
+
+## TODO
+
+- [ ] Versão desktop
+- [ ] Sistema de avaliações
+
 ## Tecnologias utilizadas
 
 - TypeScript
