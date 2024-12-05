@@ -4,7 +4,7 @@ import { Barbershop, BarbershopService, Booking } from "@prisma/client"
 import Image from "next/image"
 import { ptBR } from "date-fns/locale"
 import { useEffect, useMemo, useState } from "react"
-import { addDays, format, isPast, isToday, set } from "date-fns"
+import { isPast, isToday, set } from "date-fns"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 
@@ -22,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "./ui/sheet"
+import BookingSummary from "./booking-summary"
 
 interface ServiceItemProps {
   service: BarbershopService
@@ -57,7 +58,6 @@ interface GetTimeListProps {
   selectedDay: Date
 }
 
-// TODO: não exibir horários passados
 // TODO: distinguir horários de cada barbearia
 const getTimeList = ({ bookings, selectedDay }: GetTimeListProps) => {
   return TIME_LIST.filter((time) => {
@@ -118,6 +118,14 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
     fetch()
   }, [selectedDay, service.id])
 
+  const selectedDate = useMemo(() => {
+    if (!selectedDay || !selectedTime) return
+    return set(selectedDay, {
+      hours: Number(selectedTime?.split(":")[0]),
+      minutes: Number(selectedTime?.split(":")[1]),
+    })
+  }, [selectedDay, selectedTime])
+
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDay(date)
   }
@@ -127,17 +135,11 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
   }
 
   const handleCreateBooking = async () => {
-    if (!selectedDay || !selectedTime) return
+    if (!selectedDate) return
     try {
-      const hour = Number(selectedTime.split(":")[0])
-      const minute = Number(selectedTime.split(":")[1])
-      const newDate = set(selectedDay, {
-        hours: hour,
-        minutes: minute,
-      })
       await createBooking({
         serviceId: service.id,
-        date: newDate,
+        date: selectedDate,
       })
       toast.success("Reserva criada com sucesso")
       handleBookingSheetOpenChange()
@@ -256,40 +258,13 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                     </div>
                   )}
 
-                  {selectedDay && selectedTime && (
+                  {selectedDate && (
                     <div className="p-5">
-                      <Card>
-                        <CardContent className="space-y-3 p-3">
-                          <div className="flex items-center justify-between">
-                            <h2 className="font-bold">{service.name}</h2>
-                            <p className="text-sm font-bold">
-                              {Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              }).format(Number(service.price))}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <h2 className="text-sm text-gray-400">Data</h2>
-                            <p className="text-sm">
-                              {format(selectedDay, "d 'de' MMMM", {
-                                locale: ptBR,
-                              })}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <h2 className="text-sm text-gray-400">Horário</h2>
-                            <p className="text-sm">{selectedTime}</p>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <h2 className="text-sm text-gray-400">Barbearia</h2>
-                            <p className="text-sm">{barbershop.name}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <BookingSummary
+                        service={service}
+                        barbershop={barbershop}
+                        selectedDate={selectedDate}
+                      />
                     </div>
                   )}
                   <SheetFooter className="mt-5 px-5">
