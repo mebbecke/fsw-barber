@@ -1,11 +1,12 @@
 "use client"
 
 import { Barbershop, BarbershopService, Booking } from "@prisma/client"
-import Image from "next/image"
 import { ptBR } from "date-fns/locale"
 import { useEffect, useMemo, useState } from "react"
 import { isPast, isToday, set } from "date-fns"
+import Image from "next/image"
 import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { Button } from "./ui/button"
@@ -83,6 +84,7 @@ const getTimeList = ({ bookings, selectedDay }: GetTimeListProps) => {
 
 const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
   const { data } = useSession()
+  const router = useRouter()
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string | undefined>(
     undefined,
@@ -141,7 +143,12 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
         serviceId: service.id,
         date: selectedDate,
       })
-      toast.success("Reserva criada com sucesso")
+      toast.success("Reserva criada com sucesso", {
+        action: {
+          label: "Ver agendamentos",
+          onClick: () => router.push("/bookings"),
+        },
+      })
       handleBookingSheetOpenChange()
     } catch (error) {
       console.error(error)
