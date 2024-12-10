@@ -1,6 +1,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { getServerSession } from "next-auth"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 import { db } from "./_lib/prisma"
 import { Header } from "./_components/header"
@@ -10,8 +12,7 @@ import { quickSearchOptions } from "./_constants/search"
 import { BookingItem } from "./_components/booking-item"
 import Search from "./_components/search"
 import { authOptions } from "./_lib/auth"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
+import { getConfirmedBookings } from "./_data/get-confirmed-bookings"
 
 const Home = async () => {
   const session = await getServerSession(authOptions)
@@ -21,24 +22,7 @@ const Home = async () => {
       name: "desc",
     },
   })
-  const confirmedBookings = session?.user
-    ? await db.booking.findMany({
-        where: {
-          userId: (session?.user as any).id,
-          date: { gte: new Date() },
-        },
-        include: {
-          service: {
-            include: {
-              barbershop: true,
-            },
-          },
-        },
-        orderBy: {
-          date: "asc",
-        },
-      })
-    : []
+  const confirmedBookings = await getConfirmedBookings()
 
   return (
     <div>
